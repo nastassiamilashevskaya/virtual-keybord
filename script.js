@@ -186,37 +186,37 @@ class Keyboard {
           break
       }
     })
-    // console.log(this.keys)
     document.addEventListener('keydown', function (event) {
       console.log(keys)
       console.log(event.keyCode)
       const button = keys.find(i => i.code === event.keyCode)
+      console.log(button)
       if (button.text.eng === 'Shift') {
+        button.node.style.background = 'rgba(255, 255, 255, 0.1)'
         let i = 0
         document.querySelectorAll('.keyboard__key').forEach(element => {
           element.textContent = keys[i].shiftText.eng
           i++
         })
+      } else {
+        button.node.click()
+        console.log(button.node.style.background)
+        button.node.style.background = 'rgba(255, 255, 255, 0.1)'
       }
       console.log(button)
-      button.node.click()
-      if (button.text.eng !== 'Caps Lock') {
-        button.node.style.background = 'rgba(255, 255, 255, 0.2)'
-      }
     })
     document.addEventListener('keyup', function (event) {
       const button = keys.find(i => i.code === event.keyCode)
-      if (button.text.eng === 'Shift') {
+      console.log(button)
+      if (button.shiftText.eng === 'Shift') {
+        button.node.style.background = 'rgba(255, 255, 255, 0.2)'
         let i = 0
         document.querySelectorAll('.keyboard__key').forEach(element => {
           element.textContent = keys[i].text.eng
           i++
         })
       }
-      if (button.text.eng !== 'Caps Lock') {
-        button.node.click()
-        button.node.style.background = 'rgba(255, 255, 255, 0.2)'
-      }
+      button.node.style.background = 'rgba(255, 255, 255, 0.2)'
     })
   }
 
