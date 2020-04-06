@@ -53,16 +53,16 @@ const arrayButtons = [
   { text: { eng: '.', rus: 'ю' }, wide: 'short', shiftText: { eng: '>', rus: 'Ю' }, keyCode: 190 },
   { text: { eng: '/', rus: '.' }, wide: 'short', shiftText: { eng: '?', rus: ',' }, keyCode: 191 },
   { text: { eng: 'ᐃ', rus: 'ᐃ' }, wide: 'short', shiftText: { eng: 'ᐃ', rus: 'ᐃ' }, keyCode: 38 },
-  { text: { eng: 'Shift', rus: 'Shift' }, wide: 'wide', shiftText: { eng: 'Shift', rus: 'Shift' }, keyCode: 16 },
+  { text: { eng: 'Shift', rus: 'Shift' }, wide: 'wide', shiftText: { eng: 'Shift', rus: 'Shift' }, keyCode: 1600 },
   { text: { eng: 'Ctrl', rus: 'Ctrl' }, wide: 'short', shiftText: { eng: 'Ctrl', rus: 'Ctrl' }, keyCode: 17 },
   { text: { eng: 'Win', rus: 'Win' }, wide: 'short', shiftText: { eng: 'Win', rus: 'Win' }, keyCode: 91 },
   { text: { eng: 'Alt', rus: 'Alt' }, wide: 'short', shiftText: { eng: 'Alt', rus: 'Alt' }, keyCode: 18 },
   { text: { eng: 'Space', rus: 'Space' }, wide: 'extra-wide', shiftText: { eng: 'Space', rus: 'Space' }, keyCode: 32 },
-  { text: { eng: 'Alt', rus: 'Alt' }, wide: 'short', shiftText: { eng: 'Alt', rus: 'Alt' }, keyCode: 18 },
+  { text: { eng: 'Alt', rus: 'Alt' }, wide: 'short', shiftText: { eng: 'Alt', rus: 'Alt' }, keyCode: 1800 },
   { text: { eng: 'ᐊ', rus: 'ᐊ' }, wide: 'short', shiftText: { eng: 'ᐊ', rus: 'ᐊ' }, keyCode: 37 },
   { text: { eng: 'ᐁ', rus: 'ᐁ' }, wide: 'short', shiftText: { eng: 'ᐁ', rus: 'ᐁ' }, keyCode: 40 },
   { text: { eng: 'ᐅ', rus: 'ᐅ' }, wide: 'short', shiftText: { eng: 'ᐅ', rus: 'ᐅ' }, keyCode: 39 },
-  { text: { eng: 'Ctrl', rus: 'Ctrl' }, wide: 'short', shiftText: { eng: 'Ctrl', rus: 'Ctrl' }, keyCode: 17 }
+  { text: { eng: 'Ctrl', rus: 'Ctrl' }, wide: 'short', shiftText: { eng: 'Ctrl', rus: 'Ctrl' }, keyCode: 1700 }
 ]
 
 class Button {
@@ -120,8 +120,6 @@ class Keyboard {
     keyboardKeys.append(this.createKeys(this.lang))
     keyboard.append(keyboardKeys)
     document.body.append(this.textArea, keyboard)
-    const keys = this.keys
-    let lang = this.lang
 
     const TEXTAREA = document.querySelector('.textarea')
     TEXTAREA.innerText = this.value
@@ -129,48 +127,51 @@ class Keyboard {
       switch (element.innerText) {
         case 'Space':
           element.addEventListener('click', () => {
-            this.value += ' '
-            TEXTAREA.value = this.value
-            // console.log(this.value)
+            TEXTAREA.setRangeText(' ', TEXTAREA.selectionStart, TEXTAREA.selectionEnd)
+            TEXTAREA.selectionStart++
+            this.value = TEXTAREA.value
           })
           break
         case 'Backspace':
           element.addEventListener('click', () => {
-            this.value = this.value.substring(0, this.value.length - 1)
-            TEXTAREA.value = this.value
-            // console.log(this.value)
+            TEXTAREA.setRangeText('', TEXTAREA.selectionStart - 1, TEXTAREA.selectionEnd)
+            this.value = TEXTAREA.value
           })
           break
         case 'Enter':
           element.addEventListener('click', () => {
-            this.value += '\n'
-            TEXTAREA.value = this.value
-            // console.log(this.value)
+            TEXTAREA.setRangeText('\n', TEXTAREA.selectionStart, TEXTAREA.selectionEnd)
+            TEXTAREA.selectionStart++
+            this.value = TEXTAREA.value
           })
           break
         case 'Tab':
+          element.addEventListener('click', () => {
+            TEXTAREA.setRangeText('     ', TEXTAREA.selectionStart, TEXTAREA.selectionEnd)
+            TEXTAREA.selectionStart += 5
+            this.value = TEXTAREA.value
+          })
+          break
         case 'Ctrl':
+          break
         case 'Shift':
           element.addEventListener('mousedown', () => {
             this.shift = true
-            let i = 0
-            document.querySelectorAll('.keyboard__key').forEach(element => {
-              element.textContent = keys[i].shiftText[lang]
-              i++
-            })
+            this.toggleShift()
           })
           element.addEventListener('mouseup', () => {
             this.shift = false
-            let i = 0
-            document.querySelectorAll('.keyboard__key').forEach(element => {
-              element.textContent = keys[i].text[lang]
-              i++
-            })
+            this.toggleShift()
           })
           break
         case 'Win':
         case 'Alt':
+          break
         case 'Del':
+          element.addEventListener('click', () => {
+            TEXTAREA.setRangeText('', TEXTAREA.selectionStart, TEXTAREA.selectionEnd + 1)
+            this.value = TEXTAREA.value
+          })
           break
         case 'Caps Lock':
           element.classList.add('keyboard__key--activatable')
@@ -191,55 +192,73 @@ class Keyboard {
           break
       }
     })
-    document.addEventListener('keydown', function (event) {
-      const button = keys.find(i => i.code === event.keyCode)
-      if (button.text.eng === 'Shift') {
-        this.shift = true
-        let i = 0
-        document.querySelectorAll('.keyboard__key').forEach(element => {
-          element.textContent = keys[i].shiftText[lang]
-          i++
-        })
-        button.node.classList.add('keyboard__key--active')
+    document.addEventListener('keydown', (event) => {
+      // console.log(event.keyCode)
+      // console.log(event.location)
+      let button
+      if (event.code === 'AltRight') {
+        button = this.keys.find(i => i.code === 1800)
       } else {
-        if (button.text.eng === 'Alt') {
-          this.alt = true
+        if (event.code === 'ControlRight') {
+          button = this.keys.find(i => i.code === 1700)
+        } else {
+          if (event.code === 'ShiftRight') {
+            button = this.keys.find(i => i.code === 1600)
+          } else {
+            button = this.keys.find(i => i.code === event.keyCode)
+          }
         }
-        button.node.click()
-        button.node.classList.add('keyboard__key--active')
+      }
+      if (button) {
+        event.preventDefault()
+        if (event.keyCode === 16) {
+          this.shift = true
+          this.toggleShift()
+          button.node.classList.add('keyboard__key--active')
+        } else {
+          if (event.keyCode === 18) {
+            this.alt = true
+          }
+          button.node.click()
+          button.node.classList.add('keyboard__key--active')
+        }
       }
 
       if (this.shift && this.alt) {
-        if (lang === 'eng') {
-          lang = 'rus'
-        } else {
-          lang = 'eng'
-        }
-        let i = 0
-        document.querySelectorAll('.keyboard__key').forEach(element => {
-          element.textContent = keys[i].text[lang]
-          i++
-        })
+        this.changeLang()
       }
     })
-    document.addEventListener('keyup', function (event) {
-      const button = keys.find(i => i.code === event.keyCode)
-      if (button.text.eng === 'Alt') {
+    document.addEventListener('keyup', (event) => {
+      // const button = this.keys.find(i => i.code === event.keyCode)
+      let button
+      if (event.code === 'AltRight') {
+        button = this.keys.find(i => i.code === 1800)
+      } else {
+        if (event.code === 'ControlRight') {
+          button = this.keys.find(i => i.code === 1700)
+        } else {
+          if (event.code === 'ShiftRight') {
+            button = this.keys.find(i => i.code === 1600)
+          } else {
+            button = this.keys.find(i => i.code === event.keyCode)
+          }
+        }
+      }
+      if (button) {
+        event.preventDefault()
+        button.node.classList.remove('keyboard__key--active')
+      }
+      if (event.keyCode === 18) {
         this.alt = false
       }
-      if (button.shiftText.eng === 'Shift') {
+      if (event.keyCode === 16) {
         this.shift = false
-        let i = 0
-        document.querySelectorAll('.keyboard__key').forEach(element => {
-          element.textContent = keys[i].text[lang]
-          i++
-        })
+        this.toggleShift()
       }
-      button.node.classList.remove('keyboard__key--active')
     })
   }
 
-  createKeys (lang) {
+  createKeys () {
     const fragment = document.createDocumentFragment()
     let line = document.createElement('div')
     line.classList.add('line')
@@ -247,11 +266,10 @@ class Keyboard {
     for (let i = 0; i < arrayButtons.length; i++) {
       const { text, wide, shiftText, keyCode } = arrayButtons[i]
       const currentButton = new Button(text, wide, shiftText, keyCode)
-      currentButton.init(lang)
+      currentButton.init(this.lang)
       line.append(currentButton.node)
       fragment.append(line)
       this.keys.push(currentButton)
-      // console.log(this.keys)
       if (i === 13 || i === 28 || i === 41 || i === 54) {
         line = document.createElement('div')
       }
@@ -278,6 +296,78 @@ class Keyboard {
 
         default:
           element.textContent = this.capsLock ? element.textContent.toUpperCase() : element.textContent.toLowerCase()
+          break
+      }
+    })
+  }
+
+  toggleShift () {
+    let i = 0
+    document.querySelectorAll('.keyboard__key').forEach(element => {
+      switch (element.innerText) {
+        case 'Tab':
+        case 'Ctrl':
+        case 'Shift':
+        case 'Win':
+        case 'Alt':
+        case 'Del':
+        case 'Enter':
+        case 'Space':
+        case 'Backspace':
+        case 'Caps Lock':
+          i++
+          break
+
+        default:
+          if (this.capsLock && this.shift) {
+            element.textContent = this.keys[i].shiftText[this.lang].toLowerCase()
+            i++
+          } else {
+            if (this.capsLock && !this.shift) {
+              element.textContent = this.keys[i].text[this.lang].toUpperCase()
+              i++
+            } else {
+              if (!this.capsLock && this.shift) {
+                element.textContent = this.keys[i].shiftText[this.lang]
+                i++
+              } else {
+                if (!this.capsLock && !this.shift) {
+                  element.textContent = this.keys[i].text[this.lang]
+                  i++
+                }
+              }
+            }
+          }
+          break
+      }
+    })
+  }
+
+  changeLang () {
+    if (this.lang === 'eng') {
+      this.lang = 'rus'
+    } else {
+      this.lang = 'eng'
+    }
+    let i = 0
+    document.querySelectorAll('.keyboard__key').forEach(element => {
+      switch (element.innerText) {
+        case 'Tab':
+        case 'Ctrl':
+        case 'Shift':
+        case 'Win':
+        case 'Alt':
+        case 'Del':
+        case 'Enter':
+        case 'Space':
+        case 'Backspace':
+        case 'Caps Lock':
+          i++
+          break
+
+        default:
+          element.textContent = this.capsLock ? this.keys[i].text[this.lang].toUpperCase() : this.keys[i].text[this.lang]
+          i++
           break
       }
     })
