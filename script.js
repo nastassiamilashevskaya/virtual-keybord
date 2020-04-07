@@ -104,22 +104,26 @@ class Keyboard {
     this.capsLock = false
     this.shift = false
     this.alt = false
-    this.lang = 'eng'
+    this.lang = window.localStorage.getItem('lang') || 'eng'
   }
 
   init () {
     this.textArea = document.createElement('textarea')
     this.textArea.classList.add('textarea')
 
+    const infoText = document.createElement('div')
+    infoText.classList.add('infoText')
+    infoText.innerText = 'Сделано в ОС Windows. Смена языка Shift + Alt'
+
     const keyboard = document.createElement('div')
     keyboard.classList.add('keyboard')
 
     const keyboardKeys = document.createElement('div')
     keyboardKeys.classList.add('keyboard__keys')
-
     keyboardKeys.append(this.createKeys(this.lang))
+
     keyboard.append(keyboardKeys)
-    document.body.append(this.textArea, keyboard)
+    document.body.append(this.textArea, keyboard, infoText)
 
     const TEXTAREA = document.querySelector('.textarea')
     TEXTAREA.innerText = this.value
@@ -193,8 +197,6 @@ class Keyboard {
       }
     })
     document.addEventListener('keydown', (event) => {
-      // console.log(event.keyCode)
-      // console.log(event.location)
       let button
       if (event.code === 'AltRight') {
         button = this.keys.find(i => i.code === 1800)
@@ -229,7 +231,6 @@ class Keyboard {
       }
     })
     document.addEventListener('keyup', (event) => {
-      // const button = this.keys.find(i => i.code === event.keyCode)
       let button
       if (event.code === 'AltRight') {
         button = this.keys.find(i => i.code === 1800)
@@ -344,10 +345,12 @@ class Keyboard {
   }
 
   changeLang () {
-    if (this.lang === 'eng') {
-      this.lang = 'rus'
-    } else {
+    if (this.lang === 'rus') {
       this.lang = 'eng'
+      window.localStorage.setItem('lang', this.lang)
+    } else {
+      this.lang = 'rus'
+      window.localStorage.setItem('lang', this.lang)
     }
     let i = 0
     document.querySelectorAll('.keyboard__key').forEach(element => {
